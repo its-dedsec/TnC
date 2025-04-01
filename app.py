@@ -11,7 +11,6 @@ import nltk
 from nltk.tokenize import sent_tokenize
 import plotly.graph_objects as go
 
-Initialize NLTK (uncomment if running for the first time)
 nltk.download('punkt')
 
 # Set page configuration
