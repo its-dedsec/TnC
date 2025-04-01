@@ -11,6 +11,8 @@ import nltk
 from nltk.tokenize import sent_tokenize
 import plotly.graph_objects as go
 
+nltk.download('punkt')
+
 # Set page configuration
 st.set_page_config(
     page_title="Terms and Conditions Analyzer",
