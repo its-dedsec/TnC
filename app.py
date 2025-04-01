@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import re
 import requests
-from bs4 import BeautifulSoup
+import html.parser
 import PyPDF2
 import io
 from PIL import Image
@@ -11,7 +11,35 @@ import nltk
 from nltk.tokenize import sent_tokenize
 import plotly.graph_objects as go
 
-nltk.download('punkt')
+# HTML Parser class to extract text from HTML
+class HTMLTextExtractor(html.parser.HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.text = []
+        self.ignore_tags = {'script', 'style', 'head', 'title', 'meta', 'link'}
+        self.current_tag = None
+    
+    def handle_starttag(self, tag, attrs):
+        self.current_tag = tag
+    
+    def handle_endtag(self, tag):
+        self.current_tag = None
+    
+    def handle_data(self, data):
+        if self.current_tag not in self.ignore_tags and data.strip():
+            self.text.append(data.strip())
+    
+    def get_text(self):
+        return ' '.join(self.text)
+
+def extract_text_from_html(html_content):
+    """Extract text from HTML content using Python's built-in parser"""
+    parser = HTMLTextExtractor()
+    parser.feed(html_content)
+    return parser.get_text()
+
+# Initialize NLTK (uncomment if running for the first time)
+# nltk.download('punkt')
 
 # Set page configuration
 st.set_page_config(
@@ -117,8 +145,8 @@ def main():
                     try:
                         response = requests.get(url)
                         if response.status_code == 200:
-                            soup = BeautifulSoup(response.text, 'html.parser')
-                            document_text = soup.get_text()
+                            html_content = response.text
+                            document_text = extract_text_from_html(html_content)
                             st.success("Document successfully retrieved!")
                         else:
                             st.error(f"Failed to retrieve document. Status code: {response.status_code}")
@@ -150,8 +178,7 @@ def main():
                         elif file_type == 'html':
                             # Process HTML file
                             html_content = uploaded_file.read().decode('utf-8')
-                            soup = BeautifulSoup(html_content, 'html.parser')
-                            document_text = soup.get_text()
+                            document_text = extract_text_from_html(html_content)
                         
                         elif file_type == 'docx':
                             st.warning("DOCX format support is limited. For best results, consider converting to PDF or TXT.")
